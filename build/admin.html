@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/build/css/reset.css">
+    <link rel="stylesheet" href="/build/css/style.css">
+    <link rel="stylesheet" href="/build/css/my.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <h2 class="title">Admin Dashboard</h2>
+
+        <button id="newGame">Start new game</button>
+        <div class="team-selection">
+            <select name="team1" id="selector-team1">
+                <option value="team1">Choose team 1</option>
+                <option value="RUHUNA">RUHUNA</option>
+                <option value="MORATUWA">MORATUWA</option>
+                <option value="PERA">PERA</option>
+                <option value="COLOMBO">COLOMBO</option>
+                <option value="J'PURA">J'PURA</option>
+                <option value="RAJARATA">RAJARATA</option>
+                <option value="KALANIYA">KALANIYA</option>
+                <option value="JAFFNA">JAFFNA</option>
+                <option value="UWA">UWA</option>
+                <option value="SAMBARE">SAMBARE</option>
+            </select>
+            <h3>VS</h3>
+            <select name="team2" id="selector-team2">
+                <option value="team2">Choose team 2</option>
+                <option value="RUHUNA">RUHUNA</option>
+                <option value="MORATUWA">MORATUWA</option>
+                <option value="PERA">PERA</option>
+                <option value="COLOMBO">COLOMBO</option>
+                <option value="J'PURA">J'PURA</option>
+                <option value="RAJARATA">RAJARATA</option>
+                <option value="KALANIYA">KALANIYA</option>
+                <option value="JAFFNA">JAFFNA</option>
+                <option value="UWA">UWA</option>
+                <option value="SAMBARE">SAMBARE</option>
+            </select>
+        </div>
+
+
+        <div class="abc">
+          <button class="goals" id="goals-team1-up">+</button>
+          <button class="goals" id="goals-team2-up">+</button>
+        </div>
+
+        <div class="abc">
+          <h3 class="goalsTeam1">0</h3>
+          <h3 class="goalsTeam2">0</h3>
+        </div>
+
+        <div class="abc">
+          <button class="goals" id="goals-team1-down">-</button>
+          <button class="goals" id="goals-team2-down">-</button>
+        </div>
+
+
+
+
+        <div class="statistics">
+            <!-- <div class="scores">
+                <button class="goals" id="goals-team1-up">+</button>
+                <h3 class="goalsTeam1">0</h3>
+                <button class="goals" id="goals-team1-down">-</button>
+                <p>Score</p>
+                <button class="goals" id="goals-team2-up">+</button>
+                <h3 class="goalsTeam2">0</h3>
+                <button class="goals" id="goals-team2-down">-</button>
+            </div> -->
+            <div class="shots">
+                <button class="shots" id="shots-team1-up">+</button>
+                <h3 class="shotsTeam1">0</h3>
+                <button class="shots" id="shots-team1-down">-</button>
+                <p>Shots</p>
+                <button class="shots" id="shots-team2-up">+</button>
+                <h3 class="shotsTeam2">0</h3>
+                <button class="shots" id="shots-team2-down">-</button>
+            </div>
+            <div class="fouls">
+                <button class="fouls" id="fouls-team1-up">+</button>
+                <h3 class="foulsTeam1">0</h3>
+                <button class="fouls" id="fouls-team1-down">-</button>
+                <p>Fouls</p>
+                <button class="fouls" id="fouls-team2-up">+</button>
+                <h3 class="foulsTeam2">0</h3>
+                <button class="fouls" id="fouls-team2-down">-</button>
+            </div>
+        </div>
+        <div class="updates">
+            <h3>Realtime Updates</h3>
+            <form action="">
+                <input type="text" id="txtUpdateTeam1" placeholder="Type here your update for team 1">
+                <input type="text" id="txtUpdateTeam2" placeholder="Type here your update for team 2">
+            </form>
+        </div>
+    </div>
+    <input type="hidden" id="objectID" value="">
+</body>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<script   src="https://code.jquery.com/jquery-1.12.4.js"   integrity="sha256-Qw82+bXyGq6MydymqBxNPYTaUXXq7c8v3CwiYwLLNXU="   crossorigin="anonymous"></script>
+<script>
+    //var socket = io('https://real-time-scoreboard.herokuapp.com', {secure: true});
+    var socket = io();//edited chamara
+
+    $('select').on('change', function() {
+        var objectID = $("#objectID").val();
+        socket.emit(this.id, {
+            'id': objectID,
+            'country': $(this).find(":selected").text()
+        });
+    });
+
+    $('button').on('click', function() {
+        var id = this.id;
+        var objectID = $("#objectID").val()
+        socket.emit(this.id, {
+            'id': objectID
+        });
+    });
+
+    $('input').keyup('click', function(e) {
+        var input = $(this).attr('id');
+        var objectID = $("#objectID").val()
+
+        if (input == 'txtUpdateTeam1' && e.keyCode == 13) {
+            socket.emit('updateTeam1', {
+                'id': objectID,
+                'update': $('#txtUpdateTeam1').val()
+            });
+            $('#txtUpdateTeam1').val('');
+        } else if (input == 'txtUpdateTeam2' && e.keyCode == 13) {
+            socket.emit('updateTeam2', {
+                'id': objectID,
+                'update': $('#txtUpdateTeam2').val()
+            });
+            $('#txtUpdateTeam2').val('');
+        }
+    });
+
+	// LOAD CURRENT ONGOING GAME FOR ADMIN
+	socket.on('getCurrentGame', function(game){
+		if (typeof game.team1 !== "undefined"){
+			$('#selector-team1 option[value=' + game.team1.country + ']').attr("selected", "selected");
+			$('#selector-team2 option[value=' + game.team1.country + ']').attr("selected", "selected");
+			$('.goalsTeam1').text(game.team1.goals);
+			$('.goalsTeam2').text(game.team2.goals);
+			$('.shotsTeam1').text(game.team1.shots);
+			$('.shotsTeam2').text(game.team2.shots);
+			$('.foulsTeam1').text(game.team1.fouls);
+			$('.foulsTeam2').text(game.team2.fouls);
+		}
+	});
+
+	// UPDATE LIVE GAME STATS
+    socket.on('updateGame', function(game) {
+        $('.goalsTeam1').text(game.team1.goals);
+        $('.goalsTeam2').text(game.team2.goals);
+        $('.shotsTeam1').text(game.team1.shots);
+        $('.shotsTeam2').text(game.team2.shots);
+        $('.foulsTeam1').text(game.team1.fouls);
+        $('.foulsTeam2').text(game.team2.fouls);
+    });
+
+	// RESET STATS WHEN NEW GAME HAS STARTED
+    socket.on('newGame', function(game) {
+		$('select').prop('selectedIndex', 0);
+		$('.goalsTeam1').text(game.team1.goals);
+        $('.goalsTeam2').text(game.team2.goals);
+        $('.shotsTeam1').text(game.team1.shots);
+        $('.shotsTeam2').text(game.team2.shots);
+        $('.foulsTeam1').text(game.team1.fouls);
+        $('.foulsTeam2').text(game.team2.fouls);
+        $('#objectID').attr('value', game._id);
+    });
+</script>
+
+</html>
